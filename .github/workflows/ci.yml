@@ -1,7 +1,5 @@
 name: CI Pipeline
 
-# Este pipeline se ejecuta automáticamente cuando hago push
-# o cuando se crea un pull request hacia la rama main.
 on:
   push:
     branches:
@@ -12,20 +10,18 @@ on:
 
 jobs:
   backend:
-    name: Backend CI
+    name: Backend CI & Security
     runs-on: ubuntu-latest
-
-    # Trabajo dentro de la carpeta backend porque ahí está la API.
     defaults:
       run:
         working-directory: backend
 
     steps:
-      # Primero clono el repositorio para que GitHub Actions tenga acceso al código.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Requerido por SonarCloud
 
-      # Configuro Node.js para poder instalar dependencias y ejecutar pruebas.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,30 +29,36 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      # Instalo las dependencias del backend usando npm ci,
-      # que es más recomendado para ambientes de integración continua.
+      - name: Run Snyk to check Backend vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
       - name: Install backend dependencies
         run: npm ci
 
-      # Ejecuto las pruebas del backend para validar que la API no tenga errores.
       - name: Run backend tests
         run: npm test
 
-  frontend:
-    name: Frontend CI
-    runs-on: ubuntu-latest
+      - name: SonarCloud Scan Backend
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    # Trabajo dentro de la carpeta frontend porque ahí está la aplicación React.
+  frontend:
+    name: Frontend CI & Security
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      # Clono el repositorio para tener disponible el código del frontend.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Configuro Node.js para poder instalar dependencias y compilar el proyecto.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -64,11 +66,19 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      # Instalo las dependencias del frontend.
+      - name: Run Snyk to check Frontend vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
       - name: Install frontend dependencies
         run: npm ci
 
-      # Compilo el frontend para validar que la aplicación se pueda construir correctamente.
       - name: Build frontend
         run: npm run build
 
+      - name: SonarCloud Scan Frontend
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
