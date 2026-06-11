@@ -1,4 +1,3 @@
----
 
 # Proyecto DevOps - Aplicación Web Segura en Kubernetes con Monitoreo Activo
 
@@ -19,7 +18,6 @@ La aplicación está compuesta por:
 * **Pipeline CD:** Definido y orquestado mediante Jenkins en bloques de entrega continua.
 * **Monitoreo:** Recolección y visualización de métricas nativas del clúster.
 
----
 
 ## Tecnologías utilizadas y Justificación
 
