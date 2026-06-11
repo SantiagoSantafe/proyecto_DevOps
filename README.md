@@ -1,5 +1,6 @@
 
 # Proyecto DevOps - Aplicación Web Segura en Kubernetes con Monitoreo Activo
+## Valentina Rodriguez y Santiago Santafe
 
 ## Descripción del proyecto
 
