@@ -1,288 +1,177 @@
+---
 
-# Proyecto DevOps - Aplicación Web en Kubernetes
+# Proyecto DevOps - Aplicación Web Segura en Kubernetes con Monitoreo Activo
 
 ## Descripción del proyecto
 
-Este proyecto corresponde a la primera entrega del laboratorio de DevOps.
+Este proyecto corresponde a la entrega final y consolidada del laboratorio técnico de DevOps (Metodología ABP).
 
-El objetivo es estructurar e implementar dos pipelines para una aplicación web alojada en GitHub, utilizando herramientas de integración continua y entrega continua.
+El objetivo principal es la implementación de un pipeline CI/CD completamente funcional que integra de extremo a extremo prácticas de seguridad automatizada (**DevSecOps**) y observabilidad en tiempo real (**Monitoreo**), garantizando un ciclo de vida de desarrollo de software eficiente y seguro.
 
 La aplicación está compuesta por:
 
-- Frontend desarrollado con React y Vite.
-- Backend desarrollado con Node.js y Express.
-- Base de datos MongoDB.
-- Contenedores Docker.
-- Manifiestos Kubernetes para el despliegue.
-- Pipeline CI con GitHub Actions.
-- Pipeline CD definido con Jenkins.
+* **Frontend:** Desarrollado con React y Vite.
+* **Backend:** Desarrollado con Node.js y Express.
+* **Base de Datos:** MongoDB.
+* **Contenedores:** Docker de arquitectura múltiple.
+* **Orquestación:** Manifiestos de Kubernetes ejecutados sobre clúster nativo local.
+* **Pipeline CI:** Automatizado en GitHub Actions con escaneos de código y dependencias.
+* **Pipeline CD:** Definido y orquestado mediante Jenkins en bloques de entrega continua.
+* **Monitoreo:** Recolección y visualización de métricas nativas del clúster.
 
 ---
 
-## Tecnologías utilizadas
+## Tecnologías utilizadas y Justificación
 
-| Tecnología | Uso dentro del proyecto |
-|---|---|
-| GitHub | Alojamiento del código fuente |
-| GitHub Actions | Automatización del pipeline de integración continua |
-| Jenkins | Definición del pipeline de entrega continua |
-| Docker | Construcción de imágenes del backend y frontend |
-| DockerHub | Registro para publicar imágenes Docker |
-| Kubernetes | Orquestación y despliegue de los servicios |
-| React + Vite | Desarrollo del frontend |
-| Node.js + Express | Desarrollo del backend |
-| MongoDB | Base de datos de la aplicación |
-
----
-
-## Justificación de herramientas
-
-Se seleccionaron herramientas actuales y ampliamente utilizadas en entornos DevOps:
-
-- **GitHub Actions:** permite ejecutar automáticamente el proceso de integración continua ante cada `push` o `pull request`.
-- **Jenkins:** permite definir un flujo de entrega continua mediante stages claros y reutilizables.
-- **Docker:** permite empaquetar la aplicación en imágenes portables.
-- **DockerHub:** permite publicar las imágenes construidas para que puedan ser desplegadas en distintos entornos.
-- **Kubernetes:** permite desplegar la aplicación en un entorno escalable y agnóstico.
-- **MongoDB:** permite almacenar la información de la aplicación en una base de datos NoSQL.
+| Tecnología | Uso dentro del proyecto | Justificación Técnica |
+| --- | --- | --- |
+| **GitHub** | Alojamiento del código fuente | Repositorio centralizado para el control de versiones y disparador de eventos CI. |
+| **GitHub Actions** | Automatización de Integración Continua (CI) | Ejecuta flujos de trabajo aislados en la nube ante cada push, optimizando el tiempo de feedback. |
+| **Jenkins** | Pipeline de Entrega Continua (CD) | Orquesta de manera flexible las etapas de empaquetado, validación y despliegue local. |
+| **SonarCloud** | Análisis Estático de Código (SAST) | Versión SaaS de SonarQube. Evalúa la mantenibilidad, duplicación y encuentra fallos de seguridad sin consumir recursos del clúster. |
+| **Snyk** | Escaneo de Dependencias (SCA) | Detecta vulnerabilidades y exploits conocidos en librerías de terceros dentro de los `package.json`. |
+| **Docker / DockerHub** | Contenerización y Registro | Empaqueta la aplicación en imágenes portables e inmutables listas para producción. |
+| **Kubernetes (OrbStack)** | Orquestación de Contenedores | Entorno de ejecución de alta eficiencia que gestiona el ciclo de vida, escalado y red de los Pods. |
+| **Helm** | Gestor de Paquetes para K8s | Permite instalar y versionar arquitecturas complejas (como la pila de monitoreo) con un solo comando. |
+| **Prometheus** | Recolección de Métricas | Base de datos de series temporales que extrae automáticamente métricas de estado del clúster. |
+| **Grafana** | Visualización de Datos | Panel de control interactivo para monitorizar CPU, memoria y rendimiento general en tiempo real. |
 
 ---
 
-## Arquitectura general
-
-La arquitectura del proyecto se compone de tres capas principales:
+## Arquitectura del Flujo CI/CD/SecOps
 
 ```text
-Frontend React + Vite
-        ↓
-Backend Node.js + Express
-        ↓
-MongoDB
-````
+ [ Código Local ] ──> Push a GitHub ──> [ GitHub Actions (CI) ]
+                                                │
+                                                ├──> Snyk (Vulnerabilidades)
+                                                └──> SonarCloud (Calidad/SAST)
+                                                ↓
+ [ Jenkins (CD en Localhost) ] <── Poll SCM ── Validado ✔️
+        │
+        ├──> Build & Push Docker Images (DockerHub)
+        └──> Despliegue en Kubernetes (OrbStack) ──> [ Prometheus + Grafana Monitoreo ]
 
-Cada componente cuenta con archivos de configuración para ser ejecutado en contenedores y desplegado en Kubernetes.
+```
 
 ---
 
-## Estructura del repositorio
+## Estructura Final del Repositorio
 
 ```text
 proyecto_DevOps/
 │
 ├── .github/
 │   └── workflows/
-│       └── ci.yml
+│       └── ci.yml             # Pipeline de CI (Instalación, Tests, Snyk, SonarCloud)
 │
 ├── backend/
 │   ├── Dockerfile
 │   ├── server.js
 │   ├── package.json
-│   ├── package-lock.json
-│   ├── api-deployment.yaml
-│   ├── api-service.yaml
-│   ├── hpa-api.yaml
-│   ├── ingress.yaml
-│   ├── mongo-deployment.yaml
-│   ├── mongo-service.yaml
-│   ├── mongo-pv.yaml
-│   ├── mongo-pvc.yaml
-│   └── mongodb.yaml
+│   ├── ... (manifiestos de Kubernetes para API y MongoDB: deploy, svc, hpa, ingress, pv, pvc)
 │
 ├── frontend/
 │   ├── Dockerfile
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── index.html
-│   ├── vite.config.js
-│   ├── frontend-deployment.yaml
-│   ├── frontend-service.yaml
-│   ├── frontend-ingress.yaml
-│   ├── public/
-│   └── src/
+│   ├── src/
+│   ├── ... (manifiestos de Kubernetes para Frontend: deploy, svc, ingress)
 │
-├── docs/
-│   ├── github-actions-backend.png
-│   └── github-actions-frontend.png
+├── monitoring/
+│   └── README.md              # Instrucciones del despliegue del stack de monitoreo Helm
 │
-├── Jenkinsfile
-├── README.md
-└── .gitignore
+├── Jenkinsfile                # Pipeline de CD completamente estructurado
+└── README.md
+
 ```
 
 ---
 
-## Pipeline CI - GitHub Actions
+## Pipeline CI - GitHub Actions (Con Seguridad Integrada)
 
-El pipeline de integración continua se encuentra definido en el archivo:
+El pipeline de integración continua (`ci.yml`) automatiza la validación de calidad y la seguridad del código fuente antes de permitir cualquier despliegue.
 
-```text
-.github/workflows/ci.yml
-```
+### Etapas del pipeline CI:
 
-Este pipeline se ejecuta automáticamente cuando ocurre un `push` o un `pull request` hacia la rama `main`.
-
-### Stages del pipeline CI
-
-El pipeline ejecuta las siguientes actividades:
-
-1. Clonar el repositorio.
-2. Configurar Node.js.
-3. Instalar dependencias del backend.
-4. Ejecutar pruebas del backend.
-5. Instalar dependencias del frontend.
-6. Compilar el frontend.
-
-### Flujo del backend
-
-```text
-Checkout repository
-        ↓
-Setup Node.js
-        ↓
-Install backend dependencies
-        ↓
-Run backend tests
-```
-
-### Flujo del frontend
-
-```text
-Checkout repository
-        ↓
-Setup Node.js
-        ↓
-Install frontend dependencies
-        ↓
-Build frontend
-```
+1. **Checkout:** Descarga el código con historial profundo para trazabilidad.
+2. **Setup Node.js:** Prepara el entorno de ejecución según la versión del proyecto.
+3. **Snyk Security Scan:** Analiza de forma estricta las dependencias en busca de paquetes vulnerables.
+4. **Install & Test:** Descarga las dependencias e instala componentes pasando los test unitarios.
+5. **SonarCloud Analysis:** Ejecuta el motor de análisis estático buscando malas prácticas y code smells.
 
 ---
 
 ## Pipeline CD - Jenkins
 
-El pipeline de entrega continua se encuentra definido en el archivo:
+El archivo `Jenkinsfile` define un pipeline declarativo funcional estructurado en fases limpias y diseñado para entornos operativos de alta disponibilidad:
+
+1. **Checkout Repository:** Sincroniza la última versión del código validado en el CI.
+2. **Build Docker Images:** Compila las imágenes del frontend y el backend de forma aislada.
+3. **Security Verification:** Valida que las firmas de calidad pasadas en la nube se encuentren aprobadas.
+4. **Push to Registry:** Publica las imágenes inmutables etiquetadas en DockerHub.
+5. **Deploy to Kubernetes Cluster:** Aplica los manifiestos YAML actualizando los deployments en el clúster.
+6. **Verify Prometheus Monitoring:** Certifica que Prometheus descubra los nuevos servicios para iniciar el rastreo.
+
+---
+
+## Evidencias de Ejecución y Resultados
+
+### 1. Evidencias de Integración Continua (CI)
+
+#### Captura del Pipeline Completo de GitHub Actions
+
+Muestra la ejecución exitosa de los Jobs concurrentes de Frontend y Backend.
+![GitHub Actions Pipeline Exitoso](docs/github-actions-exitoso.png)
+
+#### Análisis de Código Estático (SonarCloud)
+
+El proyecto ha sido evaluado en la nube arrojando las métricas de calidad de software correspondientes.
+![Dashboard de Analisis SonarCloud](docs/sonarcloud-dashboard.png)
+
+#### Reporte de Vulnerabilidades de Dependencias (Snyk)
+
+Resultados obtenidos directamente del escaneo del gestor de paquetes del proyecto:
 
 ```text
-Jenkinsfile
+Tested 89 dependencies for known issues, found 5 issues, 11 vulnerable paths.
+- Mongoose (Severidad Alta): Vulnerabilidad de Inyección detectada en la v8.10.0.
+- Express (Severidad Alta/Media): Errores de asignación de recursos sin límites a través de la librería qs.
+
 ```
-
-Para esta primera entrega, no es indispensable que el pipeline se encuentre completamente funcional.
-El objetivo principal es definir correctamente los stages necesarios para la entrega continua.
-
-### Stages del pipeline CD
-
-El Jenkinsfile incluye los siguientes stages:
-
-1. **Checkout Repository**
-   Clona el repositorio desde GitHub.
-
-2. **Build Backend Image**
-   Construye la imagen Docker del backend.
-
-3. **Build Frontend Image**
-   Construye la imagen Docker del frontend.
-
-4. **Login to DockerHub**
-   Representa el paso de autenticación al registro de imágenes.
-
-5. **Push Backend Image**
-   Publica la imagen Docker del backend en DockerHub.
-
-6. **Push Frontend Image**
-   Publica la imagen Docker del frontend en DockerHub.
-
-7. **Prepare Kubernetes Deployment**
-   Verifica que los manifiestos Kubernetes estén listos para el despliegue.
+![Consola Escaneo Snyk](docs/snyk-terminal.png)
 
 ---
 
-## Imágenes Docker
+### 2. Evidencias de Entrega Continua (CD)
 
-Las imágenes definidas para el proyecto son:
+#### Captura del Pipeline de Jenkins (Stage View)
 
-```text
-valentinarodro/mi-api:v4
-valentinarodro/frontend:v4
-```
-
-### Construcción manual del backend
-
-```bash
-cd backend
-docker build -t valentinarodro/mi-api:v4 .
-```
-
-### Construcción manual del frontend
-
-```bash
-cd frontend
-docker build -t valentinarodro/frontend:v4 .
-```
-
-### Publicación manual en DockerHub
-
-```bash
-docker push valentinarodro/mi-api:v4
-docker push valentinarodro/frontend:v4
-```
+Evidencia visual de la ejecución organizada de todas las etapas operativas del pipeline de CD en bloques verdes secuenciales.
+![Jenkins Stage View Exitoso](docs/jenkins-stage-view.png)
 
 ---
 
-## Kubernetes
+### 3. Evidencias de Monitoreo Activo (Grafana)
 
-El proyecto incluye manifiestos Kubernetes para desplegar los siguientes componentes:
+#### Dashboard de Recursos de Kubernetes (Pods de la Aplicación)
 
-* Backend API.
-* Frontend.
-* MongoDB.
-* Servicios internos.
-* Volúmenes persistentes.
-* Ingress.
-* HPA para escalamiento automático.
+Visualización activa y en tiempo real de las métricas clave extraídas por Prometheus desde el clúster gestionado en OrbStack. Se evidencia el control sobre los límites de CPU y memoria del pod de la API.
 
-### Archivos principales
+![Grafana Cluster Monitoring](docs/grafana-dashboard.png)
+---
 
-```text
-backend/api-deployment.yaml
-backend/api-service.yaml
-backend/hpa-api.yaml
-backend/ingress.yaml
-backend/mongo-deployment.yaml
-backend/mongo-service.yaml
-backend/mongo-pv.yaml
-backend/mongo-pvc.yaml
-frontend/frontend-deployment.yaml
-frontend/frontend-service.yaml
-frontend/frontend-ingress.yaml
-```
+## Informe de Seguridad y Recomendaciones de Mejora
+
+Basado en los hallazgos críticos reportados por las herramientas integradas en nuestro ecosistema, se determina el siguiente plan de acción inmediato para el equipo de desarrollo:
+
+1. **Mitigación en Base de Datos:** Se requiere actualizar de forma obligatoria la librería `mongoose` de la versión `8.10.0` a la **`8.22.1`** para neutralizar por completo el riesgo de inyecciones de código hacia MongoDB.
+2. **Remediación del Servidor HTTP:** Actualizar `express` a la versión **`4.22.2`** y `body-parser` a la **`1.20.5`**. Con esto se mitigan las vulnerabilidades de Denegación de Servicio (DoS y ReDoS) provocadas por el manejo ineficiente de expresiones regulares y asignación de memoria del componente interno `qs`.
+3. **Seguridad en Código:** Analizar los 5 *Security Hotspots* indicados por SonarCloud para verificar que no existan credenciales hardcodeadas o configuraciones de CORS expuestas de manera permisiva en el archivo `server.js`.
 
 ---
 
-## Evidencias de ejecución
+## Reflexión sobre la Eficiencia Operativa
 
-### GitHub Actions
+La transición hacia una cultura **DevSecOps** mediante este laboratorio demuestra que la automatización de la seguridad y el monitoreo no añade burocracia, sino velocidad y resiliencia:
 
-El pipeline de integración continua fue ejecutado correctamente desde GitHub Actions.
-
-En la ejecución se puede observar que ambos jobs finalizaron exitosamente:
-
-* **Backend CI**
-* **Frontend CI**
-
-#### Evidencia Backend CI
-
-![Backend CI ejecutado correctamente](docs/github-actions-backend.png)
-
-#### Evidencia Frontend CI
-
-![Frontend CI ejecutado correctamente](docs/github-actions-frontend.png)
-
-Estas capturas evidencian que el pipeline realizó correctamente las siguientes etapas:
-
-* Checkout del repositorio.
-* Configuración de Node.js.
-* Instalación de dependencias.
-* Ejecución de pruebas del backend.
-* Compilación del frontend.
-
----
+* **Seguridad Preventiva (Shift Left):** Al integrar Snyk y SonarCloud en el flujo inicial de GitHub Actions, las vulnerabilidades son interceptadas en la máquina del desarrollador mucho antes de llegar a producción. Esto reduce drásticamente el costo de reparación de fallos.
+* **Observabilidad de Negocio:** La integración transparente de Prometheus y Grafana mediante Helm dota al equipo de infraestructura de telemetría en tiempo real. Esto permite realizar escalados automáticos basados en datos (HPA) y detectar fugas de memoria o saturación de CPU antes de que afecten la experiencia del usuario final.
+* **Consistencia:** Jenkins elimina el factor del error humano en los despliegues de Kubernetes, garantizando que el entorno productivo sea siempre un reflejo exacto y validado de lo que reside en el repositorio de código.

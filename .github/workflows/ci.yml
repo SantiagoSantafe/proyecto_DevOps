@@ -1,4 +1,4 @@
-name: CI Pipeline 1
+name: CI Pipeline
 
 on:
   push:
@@ -29,13 +29,17 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
+      # 1. Primero instalamos las dependencias para generar node_modules
+      - name: Install backend dependencies
+        run: npm ci
+
+      # 2. Ahora Snyk puede escanear la carpeta con éxito
       - name: Run Snyk to check Backend vulnerabilities
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Install backend dependencies
-        run: npm ci
+        with:
+          args: --file=backend/package.json
 
       - name: Run backend tests
         run: npm test
@@ -66,13 +70,17 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      # 1. Primero instalamos las dependencias del frontend
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # 2. Ejecutamos Snyk con las dependencias listas
       - name: Run Snyk to check Frontend vulnerabilities
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Install frontend dependencies
-        run: npm ci
+        with:
+          args: --file=frontend/package.json
 
       - name: Build frontend
         run: npm run build
