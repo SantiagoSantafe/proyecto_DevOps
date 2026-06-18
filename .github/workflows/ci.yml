@@ -117,10 +117,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Check DockerHub credentials
+        id: creds
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+            echo "::warning::DOCKERHUB_TOKEN no configurado. Las imagenes se construyen pero no se publican."
+          fi
+
       - name: Login to DockerHub
+        if: steps.creds.outputs.available == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: santiagosantafe
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Push Backend (multi-arch)
@@ -128,17 +141,17 @@ jobs:
         with:
           context: ./backend
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ steps.creds.outputs.available == 'true' }}
           tags: |
-            valentinarodro/mi-api:latest
-            valentinarodro/mi-api:${{ github.sha }}
+            santiagosantafe/mi-api:latest
+            santiagosantafe/mi-api:${{ github.sha }}
 
       - name: Build & Push Frontend (multi-arch)
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ steps.creds.outputs.available == 'true' }}
           tags: |
-            valentinarodro/frontend:latest
-            valentinarodro/frontend:${{ github.sha }}
+            santiagosantafe/frontend:latest
+            santiagosantafe/frontend:${{ github.sha }}
