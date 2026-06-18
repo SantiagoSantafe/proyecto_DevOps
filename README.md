@@ -282,15 +282,21 @@ Tested 89 dependencies for known issues, found 5 issues, 11 vulnerable paths.
 
 ---
 
-## Informe de Seguridad y Plan de Remediación
+## Informe de Seguridad y Remediación
 
-Basado en los hallazgos de Snyk y SonarCloud, el plan de acción inmediato es:
+Snyk detectó 5 vulnerabilidades en 11 rutas de dependencias. **Todas fueron corregidas** actualizando las librerías afectadas:
 
-| # | Hallazgo | Severidad | Remediación |
-|---|---------|-----------|-------------|
-| 1 | `mongoose` v8.10.0 — inyección en MongoDB | **Alta** | Actualizar a `mongoose@8.22.1` |
-| 2 | `express` + `qs` — DoS/ReDoS | **Alta/Media** | Actualizar a `express@4.22.2`, `body-parser@1.20.5` |
-| 3 | 5 Security Hotspots en SonarCloud | **Media** | Revisar hardcoded credentials y config CORS en `server.js` |
+| # | Hallazgo | Severidad | Estado |
+|---|---------|-----------|--------|
+| 1 | `mongoose` v8.10.0 — inyección en MongoDB (`SNYK-JS-MONGOOSE-16425765`) | **Alta** | ✅ Corregido → `mongoose@8.22.1` |
+| 2 | `qs` vía `body-parser` — NULL Pointer Dereference (`SNYK-JS-QS-16721866`) | **Media** | ✅ Corregido → `body-parser@1.20.5` |
+| 3 | `qs` vía `body-parser` — DoS sin límite de recursos (`SNYK-JS-QS-14724253`) | **Alta** | ✅ Corregido → `body-parser@1.20.5` |
+| 4 | `qs` vía `body-parser` — Allocación sin throttling (`SNYK-JS-QS-15268416`) | **Alta** | ✅ Corregido → `body-parser@1.20.5` |
+| 5 | `path-to-regexp` vía `express` — ReDoS (`SNYK-JS-PATHTOREGEXP-15789761`) | **Alta** | ✅ Corregido → `express@4.22.2` + `npm audit fix` |
+
+> `npm audit` post-remediación: **0 vulnerabilidades encontradas.**
+
+Adicionalmente, SonarCloud reportó **5 Security Hotspots** en `server.js` relacionados con posibles credenciales hardcodeadas y configuración permisiva de CORS. Estos requieren revisión manual para verificar que no representan riesgos reales en el entorno productivo.
 
 ---
 
