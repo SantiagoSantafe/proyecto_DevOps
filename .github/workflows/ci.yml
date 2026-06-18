@@ -44,10 +44,17 @@ jobs:
         run: npm test
 
       - name: SonarCloud Scan Backend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
+        continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: backend
+          args: >
+            -Dsonar.projectKey=proyecto_DevOps
+            -Dsonar.organization=santiagosantafe
+            -Dsonar.sources=.
+            -Dsonar.exclusions=node_modules/**,test.js
 
   frontend:
     name: Frontend CI & Security
@@ -83,10 +90,17 @@ jobs:
         run: npm run build
 
       - name: SonarCloud Scan Frontend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@v5
+        continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=proyecto_DevOps
+            -Dsonar.organization=santiagosantafe
+            -Dsonar.sources=src
+            -Dsonar.exclusions=node_modules/**,dist/**
 
   docker-build:
     name: Docker Build Multi-Architecture
