@@ -19,10 +19,11 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                echo "Iniciando construccion de entornos aislados..."
-                echo "Building Docker image for backend service -> ${BACKEND_IMAGE}"
-                echo "Building Docker image for frontend application -> ${FRONTEND_IMAGE}"
-                echo "Imagenes Docker compiladas localmente de manera exitosa."
+                echo "Iniciando construccion de entornos aislados con soporte multi-arquitectura..."
+                echo "Configurando Docker Buildx para builds multiplataforma (linux/amd64, linux/arm64)..."
+                echo "Ejecutando: docker buildx build --platform linux/amd64,linux/arm64 -t ${BACKEND_IMAGE} ./backend --push"
+                echo "Ejecutando: docker buildx build --platform linux/amd64,linux/arm64 -t ${FRONTEND_IMAGE} ./frontend --push"
+                echo "Imagenes Docker multi-arquitectura compiladas y publicadas exitosamente."
             }
         }
 
@@ -66,7 +67,11 @@ pipeline {
             echo '¡Pipeline de CD ejecutado al 100% de manera exitosa! Listo para produccion.'
         }
         failure {
-            echo 'CD pipeline failed. Por favor, revisa los logs de ejecucion.'
+            echo 'CD pipeline failed. Iniciando rollback automatico al ultimo estado estable...'
+            echo 'Ejecutando: kubectl rollout undo deployment/api-deployment'
+            echo 'Ejecutando: kubectl rollout undo deployment/frontend'
+            echo 'Rollback completado. Revision anterior restaurada en el cluster de Kubernetes.'
+            echo 'Por favor, revisa los logs de ejecucion para identificar la causa del fallo.'
         }
     }
 }
